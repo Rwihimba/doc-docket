@@ -22,7 +22,7 @@ export function PatientHeader() {
           <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-2">
               <div className="h-8 w-8 rounded-full bg-gradient-primary"></div>
-              <span className="text-xl font-bold text-foreground">MedBooking</span>
+              <span className="text-xl font-bold text-foreground">Doctrizer</span>
             </div>
             
             <nav className="hidden md:flex items-center space-x-6">
