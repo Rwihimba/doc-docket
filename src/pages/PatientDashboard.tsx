@@ -89,21 +89,14 @@ const PatientDashboard = () => {
         console.error('Error fetching profiles:', profilesError);
       }
 
-      console.log('Doctors data:', doctorsData);
-      console.log('Profiles data:', profiles);
-
       const profilesMap = profiles?.reduce((acc, profile) => {
         acc[profile.user_id] = profile;
         return acc;
       }, {} as Record<string, any>) || {};
 
-      console.log('Profiles map:', profilesMap);
-
       const formattedDoctors = doctorsData?.map((doctor) => {
         const profile = profilesMap[doctor.user_id];
-        console.log(`Doctor ${doctor.user_id} mapped to profile:`, profile);
         const doctorName = profile?.display_name || 'Dr. Professional';
-        console.log(`Final doctor name: ${doctorName}`);
         
         return {
           id: doctor.id,
