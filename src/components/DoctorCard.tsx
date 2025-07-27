@@ -28,13 +28,12 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
         <div className="flex items-start space-x-4">
           {/* Doctor Avatar */}
           <Avatar className="h-16 w-16 ring-2 ring-medical-blue/20">
-            <AvatarImage src={doctor.avatar} alt={doctor.name} />
+            <AvatarImage 
+              src={doctor.avatar || 'https://cdn4.iconfinder.com/data/icons/glyphs/24/icons_user-1024.png'} 
+              alt={doctor.name} 
+            />
             <AvatarFallback className="bg-medical-blue text-white text-lg font-semibold">
-              {doctor.avatar ? (
-                doctor.name.split(' ').map(n => n[0]).join('')
-              ) : (
-                <User className="h-8 w-8" />
-              )}
+              <User className="h-8 w-8" />
             </AvatarFallback>
           </Avatar>
 
