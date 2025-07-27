@@ -1,10 +1,48 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { PatientHeader } from "@/components/PatientHeader";
 import { DoctorSearchFilters } from "@/components/DoctorSearchFilters";
 import { DoctorCard } from "@/components/DoctorCard";
 import { UpcomingAppointments } from "@/components/UpcomingAppointments";
 import { mockDoctors } from "@/data/mockDoctors";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Heart } from "lucide-react";
 
 const Index = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Heart className="h-8 w-8 text-blue-400 animate-pulse mx-auto" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Heart className="h-8 w-8 text-blue-400 mx-auto" />
+          <h1 className="text-2xl font-bold text-foreground">Welcome to Doctrizer</h1>
+          <p className="text-muted-foreground">Please sign in to continue</p>
+          <Button onClick={() => navigate('/auth')}>Sign In</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <PatientHeader />
