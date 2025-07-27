@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Bell, User, Menu, Calendar, LogOut } from "lucide-react";
+import { User, Menu, Calendar, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -9,13 +8,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 
 export function PatientHeader() {
-  const [notifications] = useState(3);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -62,15 +60,6 @@ export function PatientHeader() {
 
           {/* User Actions */}
           <div className="flex items-center space-x-4">
-            {/* Notifications */}
-            <Button variant="ghost" size="sm" className="relative hover:bg-secondary">
-              <Bell className="h-5 w-5" />
-              {notifications > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-medical-teal p-0 text-xs">
-                  {notifications}
-                </Badge>
-              )}
-            </Button>
 
             {/* User Menu */}
             <DropdownMenu>

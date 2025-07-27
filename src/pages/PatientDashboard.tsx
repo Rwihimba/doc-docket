@@ -96,7 +96,7 @@ const PatientDashboard = () => {
           name: profile?.display_name || 'Dr. Professional',
           specialty: doctor.specialty,
           rating: doctor.rating || 4.5,
-          reviewCount: Math.floor(Math.random() * 200) + 50, // Random for now
+          reviewCount: 0, // Will be populated from real review data later
           experience: doctor.years_experience ? `${doctor.years_experience} years experience` : 'Experienced',
           location: doctor.location || 'Medical Center',
           nextAvailable: 'Available',

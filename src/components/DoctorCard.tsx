@@ -39,7 +39,7 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-foreground group-hover:text-medical-blue transition-colors">
-                  Dr. {doctor.name}
+                  {doctor.name.startsWith('Dr.') ? doctor.name : `Dr. ${doctor.name}`}
                 </h3>
                 <p className="text-medical-teal font-medium">{doctor.specialty}</p>
                 <p className="text-sm text-muted-foreground">{doctor.experience}</p>

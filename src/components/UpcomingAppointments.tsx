@@ -154,7 +154,7 @@ export function UpcomingAppointments() {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between">
                 <div>
-                  <h4 className="font-semibold text-foreground">Dr. {appointment.doctorName}</h4>
+                  <h4 className="font-semibold text-foreground">{appointment.doctorName.startsWith('Dr.') ? appointment.doctorName : `Dr. ${appointment.doctorName}`}</h4>
                   <p className="text-sm text-medical-teal">{appointment.specialty}</p>
                 </div>
                 <Badge className={getStatusColor(appointment.status)}>
