@@ -66,7 +66,7 @@ const PatientDashboard = () => {
 
   const fetchDoctors = async () => {
     try {
-      // First get doctors data
+      // Get doctors data
       const { data: doctorsData, error: doctorsError } = await supabase
         .from('doctors')
         .select('*');
@@ -77,33 +77,37 @@ const PatientDashboard = () => {
         return;
       }
 
-      // Then get profiles for each doctor
-      const doctorsWithProfiles = await Promise.all(
-        doctorsData?.map(async (doctor) => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('display_name')
-            .eq('user_id', doctor.user_id)
-            .maybeSingle();
+      // Get all profiles for the doctors
+      const doctorIds = doctorsData?.map(doctor => doctor.user_id) || [];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, email')
+        .in('user_id', doctorIds);
 
-          return {
-            id: doctor.id,
-            name: profile?.display_name || 'Dr. Professional',
-            specialty: doctor.specialty,
-            rating: doctor.rating || 4.5,
-            reviewCount: Math.floor(Math.random() * 200) + 50, // Random for now
-            experience: doctor.years_experience ? `${doctor.years_experience} years experience` : 'Experienced',
-            location: doctor.location || 'Medical Center',
-            nextAvailable: 'Available',
-            consultationFee: doctor.consultation_fee || 10, // Use database value or default to $10
-            avatar: doctor.avatar_url || `https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=150&h=150`,
-            isAvailableToday: true,
-            offersVideoConsult: true
-          };
-        }) || []
-      );
+      const profilesMap = profiles?.reduce((acc, profile) => {
+        acc[profile.user_id] = profile;
+        return acc;
+      }, {} as Record<string, any>) || {};
+
+      const formattedDoctors = doctorsData?.map((doctor) => {
+        const profile = profilesMap[doctor.user_id];
+        return {
+          id: doctor.id,
+          name: profile?.display_name || 'Dr. Professional',
+          specialty: doctor.specialty,
+          rating: doctor.rating || 4.5,
+          reviewCount: Math.floor(Math.random() * 200) + 50, // Random for now
+          experience: doctor.years_experience ? `${doctor.years_experience} years experience` : 'Experienced',
+          location: doctor.location || 'Medical Center',
+          nextAvailable: 'Available',
+          consultationFee: doctor.consultation_fee || 10,
+          avatar: doctor.avatar_url || `https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=150&h=150`,
+          isAvailableToday: true,
+          offersVideoConsult: true
+        };
+      }) || [];
       
-      setDoctors(doctorsWithProfiles);
+      setDoctors(formattedDoctors);
     } catch (error) {
       console.error('Error:', error);
       setDoctors([]);
