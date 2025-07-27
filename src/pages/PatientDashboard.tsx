@@ -55,7 +55,7 @@ const PatientDashboard = () => {
             experience: doctor.years_experience ? `${doctor.years_experience} years experience` : 'Experienced',
             location: doctor.location || 'Medical Center',
             nextAvailable: 'Available',
-            consultationFee: 10, // Set to $10 as requested
+            consultationFee: doctor.consultation_fee || 10, // Use database value or default to $10
             avatar: doctor.avatar_url || `https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=150&h=150`,
             isAvailableToday: true,
             offersVideoConsult: true
