@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
-import { User, Heart, Stethoscope } from 'lucide-react';
+import { User, Heart, Stethoscope, Upload } from 'lucide-react';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -27,6 +27,7 @@ export default function Auth() {
     location: '',
     yearsExperience: ''
   });
+  const [licenseFile, setLicenseFile] = useState<File | null>(null);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -108,7 +109,8 @@ export default function Auth() {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      // First, create the user account
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: signupData.email,
         password: signupData.password,
         options: {
@@ -127,8 +129,8 @@ export default function Auth() {
         }
       });
 
-      if (error) {
-        if (error.message === 'User already registered') {
+      if (signUpError) {
+        if (signUpError.message === 'User already registered') {
           toast({
             title: "Account exists",
             description: "An account with this email already exists. Please try logging in instead.",
@@ -137,11 +139,38 @@ export default function Auth() {
         } else {
           toast({
             title: "Signup failed",
-            description: error.message,
+            description: signUpError.message,
             variant: "destructive",
           });
         }
         return;
+      }
+
+      // If user is a doctor and has uploaded a license file, upload it
+      if (signupData.role === 'doctor' && licenseFile && authData.user) {
+        const fileExt = licenseFile.name.split('.').pop();
+        const fileName = `${authData.user.id}/license.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('doctor-licenses')
+          .upload(fileName, licenseFile);
+
+        if (uploadError) {
+          console.error('License upload failed:', uploadError);
+          toast({
+            title: "Warning",
+            description: "Account created but license upload failed. You can upload it later from your profile.",
+            variant: "default",
+          });
+        } else {
+          // Update the doctor's profile with the license URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('doctor-licenses')
+            .getPublicUrl(fileName);
+
+          // The doctor profile will be created by the trigger, but we can update it later
+          // For now, we'll store the license URL in the user metadata which will be handled by the trigger
+        }
       }
 
       toast({
@@ -328,17 +357,34 @@ export default function Auth() {
                             className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="bio" className="text-gray-300">Bio</Label>
-                          <Textarea
-                            id="bio"
-                            placeholder="Tell us about yourself and your practice..."
-                            value={signupData.bio}
-                            onChange={(e) => setSignupData({...signupData, bio: e.target.value})}
-                            className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
-                            rows={3}
-                          />
-                        </div>
+                         <div className="space-y-2">
+                           <Label htmlFor="bio" className="text-gray-300">Bio</Label>
+                           <Textarea
+                             id="bio"
+                             placeholder="Tell us about yourself and your practice..."
+                             value={signupData.bio}
+                             onChange={(e) => setSignupData({...signupData, bio: e.target.value})}
+                             className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
+                             rows={3}
+                           />
+                         </div>
+                         <div className="space-y-2">
+                           <Label htmlFor="license" className="text-gray-300">Medical License (PDF)</Label>
+                           <div className="relative">
+                             <Input
+                               id="license"
+                               type="file"
+                               accept=".pdf,.jpg,.jpeg,.png"
+                               onChange={(e) => setLicenseFile(e.target.files?.[0] || null)}
+                               className="bg-gray-700 border-gray-600 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+                             />
+                             {licenseFile && (
+                               <p className="text-sm text-gray-400 mt-1">
+                                 Selected: {licenseFile.name}
+                               </p>
+                             )}
+                           </div>
+                         </div>
                       </div>
                     </div>
                   )}

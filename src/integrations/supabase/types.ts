@@ -21,6 +21,7 @@ export type Database = {
           consultation_fee: number | null
           created_at: string
           id: string
+          license_url: string | null
           location: string | null
           rating: number | null
           specialty: string
@@ -34,6 +35,7 @@ export type Database = {
           consultation_fee?: number | null
           created_at?: string
           id?: string
+          license_url?: string | null
           location?: string | null
           rating?: number | null
           specialty: string
@@ -47,6 +49,7 @@ export type Database = {
           consultation_fee?: number | null
           created_at?: string
           id?: string
+          license_url?: string | null
           location?: string | null
           rating?: number | null
           specialty?: string
