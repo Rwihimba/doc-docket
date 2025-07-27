@@ -3,6 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+import { format, isToday, isTomorrow } from "date-fns";
 
 interface Appointment {
   id: string;
@@ -11,46 +15,87 @@ interface Appointment {
   date: string;
   time: string;
   type: 'in-person' | 'video' | 'phone';
-  status: 'confirmed' | 'pending' | 'cancelled';
+  status: 'confirmed' | 'pending' | 'cancelled' | 'completed';
   location?: string;
   doctorAvatar: string;
 }
 
 export function UpcomingAppointments() {
-  const appointments: Appointment[] = [
-    {
-      id: "1",
-      doctorName: "Emily Chen",
-      specialty: "Cardiology",
-      date: "Today",
-      time: "2:30 PM",
-      type: "video",
-      status: "confirmed",
-      doctorAvatar: "/placeholder-doctor1.jpg"
-    },
-    {
-      id: "2", 
-      doctorName: "Michael Rodriguez",
-      specialty: "Dermatology",
-      date: "Tomorrow",
-      time: "10:00 AM",
-      type: "in-person",
-      status: "confirmed",
-      location: "Downtown Medical Center",
-      doctorAvatar: "/placeholder-doctor2.jpg"
-    },
-    {
-      id: "3",
-      doctorName: "Sarah Williams",
-      specialty: "General Medicine",
-      date: "Friday",
-      time: "3:15 PM", 
-      type: "in-person",
-      status: "pending",
-      location: "Northside Clinic",
-      doctorAvatar: "/placeholder-doctor3.jpg"
-    }
-  ];
+  const { user } = useAuth();
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchAppointments = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('appointments')
+          .select(`
+            *,
+            doctors!appointments_doctor_id_fkey (
+              specialty,
+              avatar_url,
+              user_id
+            )
+          `)
+          .eq('patient_id', user.id)
+          .gte('appointment_date', new Date().toISOString().split('T')[0])
+          .order('appointment_date', { ascending: true })
+          .order('appointment_time', { ascending: true })
+          .limit(5);
+
+        if (error) {
+          console.error('Error fetching appointments:', error);
+          return;
+        }
+
+        // Get doctor profiles separately for display names
+        const doctorIds = data?.map(appointment => appointment.doctors?.user_id).filter(Boolean) || [];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, display_name')
+          .in('user_id', doctorIds);
+
+        const profilesMap = profiles?.reduce((acc, profile) => {
+          acc[profile.user_id] = profile;
+          return acc;
+        }, {} as Record<string, any>) || {};
+
+        const formattedAppointments: Appointment[] = data?.map(appointment => {
+          const appointmentDate = new Date(appointment.appointment_date);
+          const dateStr = isToday(appointmentDate) 
+            ? 'Today'
+            : isTomorrow(appointmentDate)
+            ? 'Tomorrow'
+            : format(appointmentDate, 'EEEE');
+
+          const doctorProfile = profilesMap[appointment.doctors?.user_id];
+
+          return {
+            id: appointment.id,
+            doctorName: doctorProfile?.display_name || 'Unknown Doctor',
+            specialty: appointment.doctors?.specialty || 'General Practice',
+            date: dateStr,
+            time: format(new Date(`2000-01-01T${appointment.appointment_time}`), 'h:mm a'),
+            type: appointment.type as 'in-person' | 'video' | 'phone',
+            status: appointment.status as 'confirmed' | 'pending' | 'cancelled' | 'completed',
+            location: appointment.location,
+            doctorAvatar: appointment.doctors?.avatar_url || "/placeholder-doctor.jpg"
+          };
+        }) || [];
+
+        setAppointments(formattedAppointments);
+      } catch (error) {
+        console.error('Error fetching appointments:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppointments();
+  }, [user]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -78,7 +123,21 @@ export function UpcomingAppointments() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {appointments.map((appointment) => (
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-pulse space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center space-x-4 p-4">
+                  <div className="h-12 w-12 bg-muted rounded-full"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : appointments.map((appointment) => (
           <div 
             key={appointment.id}
             className="flex items-center space-x-4 p-4 rounded-lg border border-border hover:border-medical-blue/30 transition-colors"
@@ -132,7 +191,7 @@ export function UpcomingAppointments() {
           </div>
         ))}
 
-        {appointments.length === 0 && (
+        {!loading && appointments.length === 0 && (
           <div className="text-center py-8">
             <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-2 text-sm font-semibold text-foreground">No upcoming appointments</h3>

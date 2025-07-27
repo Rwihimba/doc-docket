@@ -13,6 +13,10 @@ const PatientDashboard = () => {
   const navigate = useNavigate();
   const [doctors, setDoctors] = useState<any[]>([]);
   const [doctorsLoading, setDoctorsLoading] = useState(true);
+  const [appointmentStats, setAppointmentStats] = useState({
+    total: 0,
+    thisMonth: 0
+  });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -20,9 +24,45 @@ const PatientDashboard = () => {
     }
   }, [user, loading, navigate]);
 
+  const fetchAppointmentStats = async () => {
+    if (!user) return;
+    
+    try {
+      // Get total appointments
+      const { count: totalCount } = await supabase
+        .from('appointments')
+        .select('*', { count: 'exact', head: true })
+        .eq('patient_id', user.id);
+
+      // Get this month's appointments
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      
+      const { count: monthCount } = await supabase
+        .from('appointments')
+        .select('*', { count: 'exact', head: true })
+        .eq('patient_id', user.id)
+        .gte('appointment_date', startOfMonth.toISOString().split('T')[0]);
+
+      setAppointmentStats({
+        total: totalCount || 0,
+        thisMonth: monthCount || 0
+      });
+    } catch (error) {
+      console.error('Error fetching appointment stats:', error);
+    }
+  };
+
   useEffect(() => {
     fetchDoctors();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchAppointmentStats();
+    }
+  }, [user]);
 
   const fetchDoctors = async () => {
     try {
@@ -141,11 +181,11 @@ const PatientDashboard = () => {
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gradient-card p-4 rounded-lg shadow-card text-center">
-                <div className="text-2xl font-bold text-medical-blue">8</div>
+                <div className="text-2xl font-bold text-medical-blue">{appointmentStats.total}</div>
                 <div className="text-sm text-muted-foreground">Total Appointments</div>
               </div>
               <div className="bg-gradient-card p-4 rounded-lg shadow-card text-center">
-                <div className="text-2xl font-bold text-medical-teal">3</div>
+                <div className="text-2xl font-bold text-medical-teal">{appointmentStats.thisMonth}</div>
                 <div className="text-sm text-muted-foreground">This Month</div>
               </div>
             </div>

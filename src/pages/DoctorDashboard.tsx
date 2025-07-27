@@ -13,6 +13,12 @@ const DoctorDashboard = () => {
   const navigate = useNavigate();
   const [doctorProfile, setDoctorProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [doctorStats, setDoctorStats] = useState({
+    todayAppointments: 0,
+    totalPatients: 0,
+    avgRating: 0
+  });
+  const [todayAppointments, setTodayAppointments] = useState<any[]>([]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -20,26 +26,95 @@ const DoctorDashboard = () => {
     }
   }, [user, loading, navigate]);
 
-  useEffect(() => {
-    const fetchDoctorProfile = async () => {
-      if (user) {
-        const { data, error } = await supabase
-          .from('doctors')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (error) {
-          console.error('Error fetching doctor profile:', error);
-        } else {
-          setDoctorProfile(data);
-        }
-        setProfileLoading(false);
+  const fetchDoctorProfile = async () => {
+    if (user) {
+      const { data, error } = await supabase
+        .from('doctors')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching doctor profile:', error);
+      } else {
+        setDoctorProfile(data);
       }
-    };
+      setProfileLoading(false);
+    }
+  };
 
+  const fetchDoctorStats = async () => {
+    if (!user) return;
+    
+    try {
+      // Get today's appointments
+      const today = new Date().toISOString().split('T')[0];
+      const { count: todayCount, data: todayData } = await supabase
+        .from('appointments')
+        .select('*', { count: 'exact' })
+        .eq('doctor_id', user.id)
+        .eq('appointment_date', today)
+        .order('appointment_time', { ascending: true });
+
+      // Get patient profiles for today's appointments
+      const patientIds = todayData?.map(appointment => appointment.patient_id) || [];
+      const { data: patientProfiles } = await supabase
+        .from('profiles')
+        .select('user_id, display_name')
+        .in('user_id', patientIds);
+
+      const profilesMap = patientProfiles?.reduce((acc, profile) => {
+        acc[profile.user_id] = profile;
+        return acc;
+      }, {} as Record<string, any>) || {};
+
+      // Get total unique patients
+      const { data: allAppointments } = await supabase
+        .from('appointments')
+        .select('patient_id')
+        .eq('doctor_id', user.id);
+      
+      const uniquePatients = new Set(allAppointments?.map(a => a.patient_id) || []).size;
+
+      // Get doctor rating
+      const { data: doctorData } = await supabase
+        .from('doctors')
+        .select('rating')
+        .eq('user_id', user.id)
+        .single();
+
+      setDoctorStats({
+        todayAppointments: todayCount || 0,
+        totalPatients: uniquePatients,
+        avgRating: doctorData?.rating || 0
+      });
+
+      // Format today's appointments
+      const formattedTodayAppointments = todayData?.map(appointment => {
+        const patientProfile = profilesMap[appointment.patient_id];
+        return {
+          time: new Date(`2000-01-01T${appointment.appointment_time}`).toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: false
+          }),
+          patient: patientProfile?.display_name || 'Unknown Patient',
+          type: appointment.type === 'video' ? 'Video Call' : 
+                appointment.type === 'phone' ? 'Phone Call' : 'In-Person',
+          status: appointment.status
+        };
+      }) || [];
+
+      setTodayAppointments(formattedTodayAppointments);
+    } catch (error) {
+      console.error('Error fetching doctor stats:', error);
+    }
+  };
+
+  useEffect(() => {
     if (user) {
       fetchDoctorProfile();
+      fetchDoctorStats();
     }
   }, [user]);
 
@@ -59,17 +134,10 @@ const DoctorDashboard = () => {
   }
 
   const stats = [
-    { title: "Today's Appointments", value: "8", icon: Calendar, trend: "+2 from yesterday" },
-    { title: "Total Patients", value: "156", icon: Users, trend: "+12 this month" },
-    { title: "Avg Consultation", value: "25 min", icon: Clock, trend: "2 min faster" },
-    { title: "Rating", value: "4.8", icon: TrendingUp, trend: "+0.2 this month" },
-  ];
-
-  const upcomingAppointments = [
-    { time: "09:00", patient: "John Smith", type: "Consultation", status: "confirmed" },
-    { time: "10:30", patient: "Sarah Johnson", type: "Follow-up", status: "confirmed" },
-    { time: "14:00", patient: "Mike Wilson", type: "Consultation", status: "pending" },
-    { time: "15:30", patient: "Emily Davis", type: "Check-up", status: "confirmed" },
+    { title: "Today's Appointments", value: doctorStats.todayAppointments.toString(), icon: Calendar, trend: "Live data" },
+    { title: "Total Patients", value: doctorStats.totalPatients.toString(), icon: Users, trend: "All time" },
+    { title: "Avg Consultation", value: "25 min", icon: Clock, trend: "Estimated" },
+    { title: "Rating", value: doctorStats.avgRating.toFixed(1), icon: TrendingUp, trend: "Current rating" },
   ];
 
   return (
@@ -140,7 +208,7 @@ const DoctorDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {upcomingAppointments.map((appointment, index) => (
+                  {todayAppointments.map((appointment, index) => (
                     <div key={index} className="flex items-center justify-between p-4 border rounded-lg bg-background/50">
                       <div className="flex items-center space-x-4">
                         <div className="text-sm font-medium text-medical-blue">
