@@ -1,12 +1,64 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { PatientHeader } from "@/components/PatientHeader";
+import { DoctorSearchFilters } from "@/components/DoctorSearchFilters";
+import { DoctorCard } from "@/components/DoctorCard";
+import { UpcomingAppointments } from "@/components/UpcomingAppointments";
+import { mockDoctors } from "@/data/mockDoctors";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <PatientHeader />
+      
+      <main className="container mx-auto px-4 py-8 space-y-8">
+        {/* Welcome Section */}
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+            Find Your Perfect Doctor
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Book appointments with trusted healthcare professionals. Quality care, convenient scheduling.
+          </p>
+        </div>
+
+        {/* Search and Filters */}
+        <DoctorSearchFilters />
+
+        {/* Main Content Grid */}
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Doctors Grid */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-semibold text-foreground">Available Doctors</h2>
+              <span className="text-sm text-muted-foreground">
+                {mockDoctors.length} doctors found
+              </span>
+            </div>
+            
+            <div className="space-y-4">
+              {mockDoctors.map((doctor) => (
+                <DoctorCard key={doctor.id} doctor={doctor} />
+              ))}
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <UpcomingAppointments />
+            
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gradient-card p-4 rounded-lg shadow-card text-center">
+                <div className="text-2xl font-bold text-medical-blue">8</div>
+                <div className="text-sm text-muted-foreground">Total Appointments</div>
+              </div>
+              <div className="bg-gradient-card p-4 rounded-lg shadow-card text-center">
+                <div className="text-2xl font-bold text-medical-teal">3</div>
+                <div className="text-sm text-muted-foreground">This Month</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
