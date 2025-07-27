@@ -1,4 +1,4 @@
-import { Calendar, Clock, MapPin, Star, Video } from "lucide-react";
+import { Calendar, Clock, MapPin, Star, Video, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +30,11 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
           <Avatar className="h-16 w-16 ring-2 ring-medical-blue/20">
             <AvatarImage src={doctor.avatar} alt={doctor.name} />
             <AvatarFallback className="bg-medical-blue text-white text-lg font-semibold">
-              {doctor.name.split(' ').map(n => n[0]).join('')}
+              {doctor.avatar ? (
+                doctor.name.split(' ').map(n => n[0]).join('')
+              ) : (
+                <User className="h-8 w-8" />
+              )}
             </AvatarFallback>
           </Avatar>
 
