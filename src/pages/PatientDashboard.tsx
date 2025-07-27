@@ -79,21 +79,35 @@ const PatientDashboard = () => {
 
       // Get all profiles for the doctors
       const doctorIds = doctorsData?.map(doctor => doctor.user_id) || [];
-      const { data: profiles } = await supabase
+      
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, display_name, email')
         .in('user_id', doctorIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+      }
+
+      console.log('Doctors data:', doctorsData);
+      console.log('Profiles data:', profiles);
 
       const profilesMap = profiles?.reduce((acc, profile) => {
         acc[profile.user_id] = profile;
         return acc;
       }, {} as Record<string, any>) || {};
 
+      console.log('Profiles map:', profilesMap);
+
       const formattedDoctors = doctorsData?.map((doctor) => {
         const profile = profilesMap[doctor.user_id];
+        console.log(`Doctor ${doctor.user_id} mapped to profile:`, profile);
+        const doctorName = profile?.display_name || 'Dr. Professional';
+        console.log(`Final doctor name: ${doctorName}`);
+        
         return {
           id: doctor.id,
-          name: profile?.display_name || 'Dr. Professional',
+          name: doctorName,
           specialty: doctor.specialty,
           rating: doctor.rating || 4.5,
           reviewCount: 0, // Will be populated from real review data later
