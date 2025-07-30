@@ -172,6 +172,13 @@ const PatientDashboard = () => {
   };
 
   const handleConfirmBooking = async (doctorId: string, date: Date, time: string, type: 'in-person' | 'video') => {
+    console.log('=== BOOKING DEBUG START ===');
+    console.log('doctorId:', doctorId);
+    console.log('date:', date);
+    console.log('time:', time);
+    console.log('type:', type);
+    console.log('user:', user);
+    console.log('selectedDoctor:', selectedDoctor);
     if (!user) return;
 
     try {
