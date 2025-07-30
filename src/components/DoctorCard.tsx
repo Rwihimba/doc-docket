@@ -1,27 +1,30 @@
-import { Calendar, Clock, MapPin, Star, Video, User } from "lucide-react";
+import { Calendar, Clock, MapPin, Star, Video, User, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-interface DoctorCardProps {
-  doctor: {
-    id: string;
-    name: string;
-    specialty: string;
-    rating: number;
-    reviewCount: number;
-    experience: string;
-    location: string;
-    nextAvailable: string;
-    consultationFee: number;
-    avatar: string;
-    isAvailableToday: boolean;
-    offersVideoConsult: boolean;
-  };
+interface Doctor {
+  id: string;
+  name: string;
+  specialty: string;
+  rating: number;
+  reviewCount: number;
+  experience: string;
+  location: string;
+  nextAvailable: string;
+  consultationFee: number;
+  avatar: string;
+  isAvailableToday: boolean;
+  offersVideoConsult: boolean;
 }
 
-export function DoctorCard({ doctor }: DoctorCardProps) {
+interface DoctorCardProps {
+  doctor: Doctor;
+  onBookAppointment?: (doctor: Doctor) => void;
+}
+
+export function DoctorCard({ doctor, onBookAppointment }: DoctorCardProps) {
   return (
     <Card className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 group">
       <CardContent className="p-6">
@@ -92,10 +95,19 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
               </div>
               
               <div className="flex space-x-2">
-                <Button variant="outline" size="sm" className="border-medical-blue/30 text-medical-blue hover:bg-medical-blue/10">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-medical-blue/30 text-medical-blue hover:bg-medical-blue/10"
+                  onClick={() => onBookAppointment?.(doctor)}
+                >
                   View Profile
                 </Button>
-                <Button size="sm" className="bg-medical-blue hover:bg-medical-blue/90">
+                <Button 
+                  size="sm" 
+                  className="bg-medical-blue hover:bg-medical-blue/90"
+                  onClick={() => onBookAppointment?.(doctor)}
+                >
                   <Calendar className="w-4 h-4 mr-1" />
                   Book Now
                 </Button>

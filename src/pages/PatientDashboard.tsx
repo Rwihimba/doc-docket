@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { PatientHeader } from "@/components/PatientHeader";
 import { DoctorSearchFilters } from "@/components/DoctorSearchFilters";
 import { DoctorCard } from "@/components/DoctorCard";
+import { DoctorProfileModal } from "@/components/DoctorProfileModal";
 import { UpcomingAppointments } from "@/components/UpcomingAppointments";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Heart } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const PatientDashboard = () => {
   const { user, loading } = useAuth();
@@ -21,6 +23,9 @@ const PatientDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [selectedAvailability, setSelectedAvailability] = useState("");
+  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -160,6 +165,54 @@ const PatientDashboard = () => {
     applyFilters();
   }, [searchQuery, selectedSpecialty, selectedAvailability, doctors]);
 
+  const handleBookAppointment = (doctor: any) => {
+    setSelectedDoctor(doctor);
+    setIsModalOpen(true);
+  };
+
+  const handleConfirmBooking = async (doctorId: string, date: Date, time: string, type: 'in-person' | 'video') => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .insert({
+          patient_id: user.id,
+          doctor_id: doctorId,
+          appointment_date: date.toISOString().split('T')[0],
+          appointment_time: time,
+          type: type,
+          status: 'pending',
+          location: type === 'video' ? 'Video Call' : selectedDoctor?.location
+        });
+
+      if (error) {
+        console.error('Error booking appointment:', error);
+        toast({
+          title: "Booking Failed",
+          description: "There was an error booking your appointment. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Appointment Booked!",
+        description: `Your appointment with ${selectedDoctor?.name} has been confirmed for ${date.toLocaleDateString()} at ${time}.`,
+      });
+
+      setIsModalOpen(false);
+      setSelectedDoctor(null);
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Booking Failed",
+        description: "There was an error booking your appointment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -222,7 +275,11 @@ const PatientDashboard = () => {
                 </div>
               ) : (
                 filteredDoctors.map((doctor) => (
-                  <DoctorCard key={doctor.id} doctor={doctor} />
+                  <DoctorCard 
+                    key={doctor.id} 
+                    doctor={doctor} 
+                    onBookAppointment={handleBookAppointment}
+                  />
                 ))
               )}
             </div>
@@ -245,6 +302,17 @@ const PatientDashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Doctor Profile Modal */}
+        <DoctorProfileModal
+          doctor={selectedDoctor}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedDoctor(null);
+          }}
+          onBookAppointment={handleConfirmBooking}
+        />
       </main>
     </div>
   );
