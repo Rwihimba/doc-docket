@@ -81,6 +81,10 @@ export function DoctorProfileModal({ doctor, isOpen, onClose, onBookAppointment 
 
   const handleConfirmBooking = () => {
     if (selectedTime && selectedDate && doctor) {
+      console.log('Booking appointment with doctor ID:', doctor.id);
+      console.log('Date:', selectedDate);
+      console.log('Time:', selectedTime);
+      console.log('Type:', appointmentType);
       onBookAppointment(doctor.id, selectedDate, selectedTime, appointmentType);
       setShowConfirmation(false);
       onClose();
