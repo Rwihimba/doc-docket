@@ -38,8 +38,6 @@ export function DoctorProfileModal({ doctor, isOpen, onClose, onBookAppointment 
   const [appointmentType, setAppointmentType] = useState<'in-person' | 'video'>('in-person');
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
 
-  if (!doctor) return null;
-
   // Generate available time slots for the next 2 weeks
   const generateTimeSlots = (date: Date) => {
     const slots: string[] = [];
@@ -75,7 +73,7 @@ export function DoctorProfileModal({ doctor, isOpen, onClose, onBookAppointment 
   }, [selectedDate]);
 
   const handleBooking = () => {
-    if (selectedTime && selectedDate) {
+    if (selectedTime && selectedDate && doctor) {
       const bookingDateTime = new Date(selectedDate);
       const [hours, minutes] = selectedTime.split(':').map(Number);
       bookingDateTime.setHours(hours, minutes, 0, 0);
@@ -86,6 +84,21 @@ export function DoctorProfileModal({ doctor, isOpen, onClose, onBookAppointment 
   };
 
   const nextTwoWeeks = Array.from({ length: 14 }, (_, i) => addDays(new Date(), i));
+
+  // Handle null doctor case without early return
+  if (!doctor) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>No Doctor Selected</DialogTitle>
+          </DialogHeader>
+          <p>Please select a doctor to book an appointment.</p>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
