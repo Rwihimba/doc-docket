@@ -236,47 +236,50 @@ export function DoctorProfileModal({ doctor, isOpen, onClose, onBookAppointment 
                 </Card>
                 
                 {/* Time Selection */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Available Times - {format(selectedDate, 'MMM dd, yyyy')}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-32">
-                      <div className="grid grid-cols-3 gap-2">
-                        {availableSlots.map((time) => (
-                          <Button
-                            key={time}
-                            variant={selectedTime === time ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setSelectedTime(time)}
-                            className="text-xs"
-                          >
-                            {time}
-                          </Button>
-                        ))}
-                      </div>
-                      {availableSlots.length === 0 && (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          No available slots for this date. Please select another date.
-                        </p>
-                      )}
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
+                {selectedDate && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Available Times - {format(selectedDate, 'MMM dd, yyyy')}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ScrollArea className="h-32">
+                        <div className="grid grid-cols-3 gap-2">
+                          {availableSlots.map((time) => (
+                            <Button
+                              key={time}
+                              variant={selectedTime === time ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => setSelectedTime(time)}
+                              className="text-xs"
+                            >
+                              {time}
+                            </Button>
+                          ))}
+                        </div>
+                        {availableSlots.length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-4">
+                            No available slots for this date. Please select another date.
+                          </p>
+                        )}
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+                )}
                 
-                {/* Continue Button */}
-                <div className="flex gap-3">
-                  <Button
-                    onClick={handleContinueToConfirmation}
-                    disabled={!selectedTime}
-                    className="flex-1 bg-medical-blue hover:bg-medical-blue/90"
-                  >
-                    Continue to Confirmation
-                  </Button>
-                  <Button variant="outline" onClick={onClose}>
-                    Cancel
-                  </Button>
-                </div>
+                {/* Continue Button - Only show when both date and time are selected */}
+                {selectedDate && selectedTime && (
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleContinueToConfirmation}
+                      className="flex-1 bg-medical-blue hover:bg-medical-blue/90"
+                    >
+                      Continue to Confirmation
+                    </Button>
+                    <Button variant="outline" onClick={onClose}>
+                      Cancel
+                    </Button>
+                  </div>
+                )}
               </>
             ) : (
               /* Confirmation Step */
