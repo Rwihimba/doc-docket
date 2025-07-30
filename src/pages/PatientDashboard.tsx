@@ -12,11 +12,15 @@ const PatientDashboard = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [doctors, setDoctors] = useState<any[]>([]);
+  const [filteredDoctors, setFilteredDoctors] = useState<any[]>([]);
   const [doctorsLoading, setDoctorsLoading] = useState(true);
   const [appointmentStats, setAppointmentStats] = useState({
     total: 0,
     thisMonth: 0
   });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSpecialty, setSelectedSpecialty] = useState("");
+  const [selectedAvailability, setSelectedAvailability] = useState("");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -115,13 +119,46 @@ const PatientDashboard = () => {
       }) || [];
       
       setDoctors(formattedDoctors);
+      setFilteredDoctors(formattedDoctors);
     } catch (error) {
       console.error('Error:', error);
       setDoctors([]);
+      setFilteredDoctors([]);
     } finally {
       setDoctorsLoading(false);
     }
   };
+
+  const applyFilters = () => {
+    let filtered = doctors;
+
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(doctor =>
+        doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Apply specialty filter
+    if (selectedSpecialty && selectedSpecialty !== "All Specialties") {
+      filtered = filtered.filter(doctor =>
+        doctor.specialty === selectedSpecialty
+      );
+    }
+
+    // Apply availability filter (currently just for UI, can be expanded)
+    if (selectedAvailability && selectedAvailability !== "Any Time") {
+      // This can be expanded to filter by actual availability
+      filtered = filtered.filter(doctor => doctor.isAvailableToday);
+    }
+
+    setFilteredDoctors(filtered);
+  };
+
+  useEffect(() => {
+    applyFilters();
+  }, [searchQuery, selectedSpecialty, selectedAvailability, doctors]);
 
   if (loading) {
     return (
@@ -154,7 +191,11 @@ const PatientDashboard = () => {
         </div>
 
         {/* Search and Filters */}
-        <DoctorSearchFilters />
+        <DoctorSearchFilters 
+          onSearch={setSearchQuery}
+          onSpecialtyChange={setSelectedSpecialty}
+          onAvailabilityChange={setSelectedAvailability}
+        />
 
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-8">
@@ -163,7 +204,7 @@ const PatientDashboard = () => {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-semibold text-foreground">Available Doctors</h2>
               <span className="text-sm text-muted-foreground">
-                {doctorsLoading ? 'Loading...' : `${doctors.length} doctors found`}
+                {doctorsLoading ? 'Loading...' : `${filteredDoctors.length} doctors found`}
               </span>
             </div>
             
@@ -173,12 +214,14 @@ const PatientDashboard = () => {
                   <Heart className="h-8 w-8 text-blue-400 animate-pulse mx-auto mb-2" />
                   <p className="text-muted-foreground">Loading doctors...</p>
                 </div>
-              ) : doctors.length === 0 ? (
+              ) : filteredDoctors.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground">No doctors found. Try registering as a doctor!</p>
+                  <p className="text-muted-foreground">
+                    {doctors.length === 0 ? "No doctors found. Try registering as a doctor!" : "No doctors match your filters. Try adjusting your search criteria."}
+                  </p>
                 </div>
               ) : (
-                doctors.map((doctor) => (
+                filteredDoctors.map((doctor) => (
                   <DoctorCard key={doctor.id} doctor={doctor} />
                 ))
               )}
