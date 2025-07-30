@@ -37,6 +37,7 @@ export function DoctorProfileModal({ doctor, isOpen, onClose, onBookAppointment 
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [appointmentType, setAppointmentType] = useState<'in-person' | 'video'>('in-person');
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   // Generate available time slots for the next 2 weeks
   const generateTimeSlots = (date: Date) => {
@@ -72,11 +73,22 @@ export function DoctorProfileModal({ doctor, isOpen, onClose, onBookAppointment 
     }
   }, [selectedDate]);
 
-  const handleBooking = () => {
+  const handleContinueToConfirmation = () => {
+    if (selectedTime && selectedDate) {
+      setShowConfirmation(true);
+    }
+  };
+
+  const handleConfirmBooking = () => {
     if (selectedTime && selectedDate && doctor) {
       onBookAppointment(doctor.id, selectedDate, selectedTime, appointmentType);
+      setShowConfirmation(false);
       onClose();
     }
+  };
+
+  const handleBackToSelection = () => {
+    setShowConfirmation(false);
   };
 
   const nextTwoWeeks = Array.from({ length: 14 }, (_, i) => addDays(new Date(), i));
@@ -170,99 +182,162 @@ export function DoctorProfileModal({ doctor, isOpen, onClose, onBookAppointment 
           
           {/* Booking Section */}
           <div className="space-y-6">
-            {/* Appointment Type Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CalendarIcon className="h-5 w-5" />
-                  Select Appointment Type
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-1 gap-2">
-                  <Button
-                    variant={appointmentType === 'in-person' ? 'default' : 'outline'}
-                    onClick={() => setAppointmentType('in-person')}
-                    className="justify-start"
-                  >
-                    <Phone className="h-4 w-4 mr-2" />
-                    In-Person Consultation - ${doctor.consultationFee}
-                  </Button>
-                  {doctor.offersVideoConsult && (
-                    <Button
-                      variant={appointmentType === 'video' ? 'default' : 'outline'}
-                      onClick={() => setAppointmentType('video')}
-                      className="justify-start"
-                    >
-                      <Video className="h-4 w-4 mr-2" />
-                      Video Consultation - ${doctor.consultationFee - 5}
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Date Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Select Date</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  disabled={(date) => 
-                    date < startOfDay(new Date()) || 
-                    date > addDays(new Date(), 13)
-                  }
-                  className={cn("w-full pointer-events-auto")}
-                />
-              </CardContent>
-            </Card>
-            
-            {/* Time Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Available Times - {format(selectedDate, 'MMM dd, yyyy')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-32">
-                  <div className="grid grid-cols-3 gap-2">
-                    {availableSlots.map((time) => (
+            {!showConfirmation ? (
+              <>
+                {/* Appointment Type Selection */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CalendarIcon className="h-5 w-5" />
+                      Select Appointment Type
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-1 gap-2">
                       <Button
-                        key={time}
-                        variant={selectedTime === time ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setSelectedTime(time)}
-                        className="text-xs"
+                        variant={appointmentType === 'in-person' ? 'default' : 'outline'}
+                        onClick={() => setAppointmentType('in-person')}
+                        className="justify-start"
                       >
-                        {time}
+                        <Phone className="h-4 w-4 mr-2" />
+                        In-Person Consultation - ${doctor.consultationFee}
                       </Button>
-                    ))}
+                      {doctor.offersVideoConsult && (
+                        <Button
+                          variant={appointmentType === 'video' ? 'default' : 'outline'}
+                          onClick={() => setAppointmentType('video')}
+                          className="justify-start"
+                        >
+                          <Video className="h-4 w-4 mr-2" />
+                          Video Consultation - ${doctor.consultationFee - 5}
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Date Selection */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Select Date</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => date && setSelectedDate(date)}
+                      disabled={(date) => 
+                        date < startOfDay(new Date()) || 
+                        date > addDays(new Date(), 13)
+                      }
+                      className={cn("w-full pointer-events-auto")}
+                    />
+                  </CardContent>
+                </Card>
+                
+                {/* Time Selection */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Available Times - {format(selectedDate, 'MMM dd, yyyy')}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-32">
+                      <div className="grid grid-cols-3 gap-2">
+                        {availableSlots.map((time) => (
+                          <Button
+                            key={time}
+                            variant={selectedTime === time ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setSelectedTime(time)}
+                            className="text-xs"
+                          >
+                            {time}
+                          </Button>
+                        ))}
+                      </div>
+                      {availableSlots.length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No available slots for this date. Please select another date.
+                        </p>
+                      )}
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+                
+                {/* Continue Button */}
+                <div className="flex gap-3">
+                  <Button
+                    onClick={handleContinueToConfirmation}
+                    disabled={!selectedTime}
+                    className="flex-1 bg-medical-blue hover:bg-medical-blue/90"
+                  >
+                    Continue to Confirmation
+                  </Button>
+                  <Button variant="outline" onClick={onClose}>
+                    Cancel
+                  </Button>
+                </div>
+              </>
+            ) : (
+              /* Confirmation Step */
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CalendarIcon className="h-5 w-5" />
+                    Confirm Your Appointment
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Doctor:</span>
+                      <span>{doctor.name}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Specialty:</span>
+                      <span>{doctor.specialty}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Date:</span>
+                      <span>{format(selectedDate, 'EEEE, MMMM do, yyyy')}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Time:</span>
+                      <span>{selectedTime}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Type:</span>
+                      <span className="flex items-center gap-1">
+                        {appointmentType === 'video' ? <Video className="h-4 w-4" /> : <Phone className="h-4 w-4" />}
+                        {appointmentType === 'video' ? 'Video Consultation' : 'In-Person Consultation'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Fee:</span>
+                      <span className="text-lg font-bold text-medical-blue">
+                        ${appointmentType === 'video' ? doctor.consultationFee - 5 : doctor.consultationFee}
+                      </span>
+                    </div>
                   </div>
-                  {availableSlots.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No available slots for this date. Please select another date.
-                    </p>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
-            
-            {/* Booking Confirmation */}
-            <div className="flex gap-3">
-              <Button
-                onClick={handleBooking}
-                disabled={!selectedTime}
-                className="flex-1 bg-medical-blue hover:bg-medical-blue/90"
-              >
-                Book Appointment
-              </Button>
-              <Button variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-            </div>
+                  
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleConfirmBooking}
+                      className="flex-1 bg-medical-success hover:bg-medical-success/90"
+                    >
+                      Confirm & Book Appointment
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleBackToSelection}
+                      className="flex-1"
+                    >
+                      Back to Selection
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </DialogContent>
