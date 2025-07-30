@@ -74,23 +74,13 @@ export function DoctorProfileModal({ doctor, isOpen, onClose, onBookAppointment 
   }, [selectedDate]);
 
   const handleContinueToConfirmation = () => {
-    console.log('Continue to confirmation clicked');
-    console.log('selectedTime:', selectedTime);
-    console.log('selectedDate:', selectedDate);
     if (selectedTime && selectedDate) {
-      console.log('Setting showConfirmation to true');
       setShowConfirmation(true);
-    } else {
-      console.log('Missing selectedTime or selectedDate');
     }
   };
 
   const handleConfirmBooking = () => {
     if (selectedTime && selectedDate && doctor) {
-      console.log('Booking appointment with doctor ID:', doctor.id);
-      console.log('Date:', selectedDate);
-      console.log('Time:', selectedTime);
-      console.log('Type:', appointmentType);
       onBookAppointment(doctor.id, selectedDate, selectedTime, appointmentType);
       setShowConfirmation(false);
       onClose();
@@ -258,10 +248,7 @@ export function DoctorProfileModal({ doctor, isOpen, onClose, onBookAppointment 
                             key={time}
                             variant={selectedTime === time ? 'default' : 'outline'}
                             size="sm"
-                            onClick={() => {
-                              console.log('Time selected:', time);
-                              setSelectedTime(time);
-                            }}
+                            onClick={() => setSelectedTime(time)}
                             className="text-xs"
                           >
                             {time}

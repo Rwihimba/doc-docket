@@ -174,29 +174,18 @@ const PatientDashboard = () => {
   const handleConfirmBooking = async (doctorId: string, date: Date, time: string, type: 'in-person' | 'video') => {
     if (!user) return;
 
-    console.log('handleConfirmBooking called with:');
-    console.log('doctorId:', doctorId);
-    console.log('date:', date);
-    console.log('time:', time);
-    console.log('type:', type);
-    console.log('user.id:', user.id);
-
     try {
-      const appointmentData = {
-        patient_id: user.id,
-        doctor_id: doctorId,
-        appointment_date: date.toISOString().split('T')[0],
-        appointment_time: time,
-        type: type,
-        status: 'pending',
-        location: type === 'video' ? 'Video Call' : selectedDoctor?.location
-      };
-      
-      console.log('Inserting appointment data:', appointmentData);
-      
       const { data, error } = await supabase
         .from('appointments')
-        .insert(appointmentData)
+        .insert({
+          patient_id: user.id,
+          doctor_id: doctorId,
+          appointment_date: date.toISOString().split('T')[0],
+          appointment_time: time,
+          type: type,
+          status: 'pending',
+          location: type === 'video' ? 'Video Call' : selectedDoctor?.location
+        })
         .select()
         .single();
 
