@@ -174,7 +174,7 @@ const PatientDashboard = () => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('appointments')
         .insert({
           patient_id: user.id,
@@ -184,7 +184,9 @@ const PatientDashboard = () => {
           type: type,
           status: 'pending',
           location: type === 'video' ? 'Video Call' : selectedDoctor?.location
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Error booking appointment:', error);
@@ -201,6 +203,9 @@ const PatientDashboard = () => {
         description: `Your appointment with ${selectedDoctor?.name} has been confirmed for ${date.toLocaleDateString()} at ${time}.`,
       });
 
+      // Navigate to confirmation page
+      navigate(`/appointment/${data.id}`);
+      
       setIsModalOpen(false);
       setSelectedDoctor(null);
     } catch (error) {
