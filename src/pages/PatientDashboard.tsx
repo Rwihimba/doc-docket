@@ -25,6 +25,7 @@ const PatientDashboard = () => {
   const [selectedAvailability, setSelectedAvailability] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [appointmentsKey, setAppointmentsKey] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -208,6 +209,10 @@ const PatientDashboard = () => {
       
       setIsModalOpen(false);
       setSelectedDoctor(null);
+      
+      // Refresh appointments
+      setAppointmentsKey(prev => prev + 1);
+      fetchAppointmentStats();
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -292,7 +297,7 @@ const PatientDashboard = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <UpcomingAppointments />
+            <UpcomingAppointments key={appointmentsKey} />
             
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-4">

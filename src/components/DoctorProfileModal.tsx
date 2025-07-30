@@ -74,11 +74,7 @@ export function DoctorProfileModal({ doctor, isOpen, onClose, onBookAppointment 
 
   const handleBooking = () => {
     if (selectedTime && selectedDate && doctor) {
-      const bookingDateTime = new Date(selectedDate);
-      const [hours, minutes] = selectedTime.split(':').map(Number);
-      bookingDateTime.setHours(hours, minutes, 0, 0);
-      
-      onBookAppointment(doctor.id, bookingDateTime, selectedTime, appointmentType);
+      onBookAppointment(doctor.id, selectedDate, selectedTime, appointmentType);
       onClose();
     }
   };
