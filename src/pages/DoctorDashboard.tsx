@@ -19,6 +19,7 @@ const DoctorDashboard = () => {
     avgRating: 0
   });
   const [todayAppointments, setTodayAppointments] = useState<any[]>([]);
+  const [pendingAppointments, setPendingAppointments] = useState<any[]>([]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -111,10 +112,97 @@ const DoctorDashboard = () => {
     }
   };
 
+  const fetchPendingAppointments = async () => {
+    if (!user) return;
+    
+    try {
+      // Get pending appointments
+      const { data: pendingData } = await supabase
+        .from('appointments')
+        .select('*, doctors!appointments_doctor_id_fkey(specialty, avatar_url, user_id)')
+        .eq('doctor_id', user.id)
+        .eq('status', 'pending')
+        .order('appointment_date', { ascending: true })
+        .order('appointment_time', { ascending: true });
+
+      // Get patient profiles for pending appointments
+      const patientIds = pendingData?.map(appointment => appointment.patient_id) || [];
+      const { data: patientProfiles } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, email')
+        .in('user_id', patientIds);
+
+      const profilesMap = patientProfiles?.reduce((acc, profile) => {
+        acc[profile.user_id] = profile;
+        return acc;
+      }, {} as Record<string, any>) || {};
+
+      // Format pending appointments
+      const formattedPendingAppointments = pendingData?.map(appointment => {
+        const patientProfile = profilesMap[appointment.patient_id];
+        return {
+          id: appointment.id,
+          date: new Date(appointment.appointment_date).toLocaleDateString(),
+          time: new Date(`2000-01-01T${appointment.appointment_time}`).toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          }),
+          patient: patientProfile?.display_name || 'Unknown Patient',
+          patientEmail: patientProfile?.email || '',
+          type: appointment.type === 'video' ? 'Video Call' : 
+                appointment.type === 'phone' ? 'Phone Call' : 'In-Person',
+          location: appointment.location,
+          notes: appointment.notes,
+          status: appointment.status
+        };
+      }) || [];
+
+      setPendingAppointments(formattedPendingAppointments);
+    } catch (error) {
+      console.error('Error fetching pending appointments:', error);
+    }
+  };
+
+  const handleApproveAppointment = async (appointmentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'confirmed' })
+        .eq('id', appointmentId);
+
+      if (error) throw error;
+
+      // Refresh pending appointments
+      fetchPendingAppointments();
+      fetchDoctorStats();
+    } catch (error) {
+      console.error('Error approving appointment:', error);
+    }
+  };
+
+  const handleRejectAppointment = async (appointmentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'cancelled' })
+        .eq('id', appointmentId);
+
+      if (error) throw error;
+
+      // Refresh pending appointments
+      fetchPendingAppointments();
+      fetchDoctorStats();
+    } catch (error) {
+      console.error('Error rejecting appointment:', error);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchDoctorProfile();
       fetchDoctorStats();
+      fetchPendingAppointments();
     }
   }, [user]);
 
@@ -196,6 +284,72 @@ const DoctorDashboard = () => {
             </Card>
           ))}
         </div>
+
+        {/* Pending Appointments - Priority Section */}
+        {pendingAppointments.length > 0 && (
+          <Card className="bg-gradient-card shadow-card border-amber-200">
+            <CardHeader>
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <Clock className="h-5 w-5 text-amber-500" />
+                Pending Appointments - Requires Approval
+                <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                  {pendingAppointments.length}
+                </Badge>
+              </CardTitle>
+              <CardDescription>Review and approve patient appointment requests</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {pendingAppointments.map((appointment) => (
+                  <div key={appointment.id} className="border rounded-lg p-4 bg-background/50">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-4">
+                          <div className="font-semibold text-foreground">{appointment.patient}</div>
+                          <Badge variant="outline" className="text-amber-600 border-amber-300">
+                            {appointment.status}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {appointment.patientEmail}
+                        </div>
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="font-medium text-medical-blue">{appointment.date} at {appointment.time}</span>
+                          <span className="text-muted-foreground">{appointment.type}</span>
+                          {appointment.location && (
+                            <span className="text-muted-foreground">Location: {appointment.location}</span>
+                          )}
+                        </div>
+                        {appointment.notes && (
+                          <div className="text-sm text-muted-foreground">
+                            <strong>Notes:</strong> {appointment.notes}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleApproveAppointment(appointment.id)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          Approve
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleRejectAppointment(appointment.id)}
+                          className="border-red-300 text-red-600 hover:bg-red-50"
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-8">
