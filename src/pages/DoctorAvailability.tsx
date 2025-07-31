@@ -128,13 +128,48 @@ const DoctorAvailability = () => {
     
     setSaving(true);
     try {
-      // Separate new slots from existing ones
-      const newSlots = availability.filter(slot => !slot.id);
-      const existingSlots = availability.filter(slot => slot.id);
+      // Validate no duplicate time slots for same day
+      const duplicates = availability.filter((slot, index) => {
+        return availability.findIndex(s => 
+          s.day_of_week === slot.day_of_week && 
+          s.start_time === slot.start_time && 
+          s !== slot
+        ) !== -1;
+      });
 
-      // Insert new slots
-      if (newSlots.length > 0) {
-        const slotsToInsert = newSlots.map(slot => ({
+      if (duplicates.length > 0) {
+        toast({
+          title: "Error",
+          description: "Cannot have duplicate time slots for the same day and start time.",
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
+
+      // Validate start time is before end time
+      const invalidTimes = availability.filter(slot => slot.start_time >= slot.end_time);
+      if (invalidTimes.length > 0) {
+        toast({
+          title: "Error", 
+          description: "Start time must be before end time for all slots.",
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
+
+      // First, delete all existing availability for this doctor to avoid conflicts
+      const { error: deleteError } = await supabase
+        .from('doctor_availability')
+        .delete()
+        .eq('doctor_id', user.id);
+
+      if (deleteError) throw deleteError;
+
+      // Then insert all current availability slots
+      if (availability.length > 0) {
+        const slotsToInsert = availability.map(slot => ({
           doctor_id: user.id,
           day_of_week: slot.day_of_week,
           start_time: slot.start_time,
@@ -147,20 +182,6 @@ const DoctorAvailability = () => {
           .insert(slotsToInsert);
 
         if (insertError) throw insertError;
-      }
-
-      // Update existing slots
-      for (const slot of existingSlots) {
-        const { error: updateError } = await supabase
-          .from('doctor_availability')
-          .update({
-            start_time: slot.start_time,
-            end_time: slot.end_time,
-            is_available: slot.is_available
-          })
-          .eq('id', slot.id);
-
-        if (updateError) throw updateError;
       }
 
       toast({
@@ -335,6 +356,9 @@ const DoctorAvailability = () => {
                 <Button
                   variant="outline"
                   onClick={() => {
+                    // Clear existing slots first
+                    setAvailability([]);
+                    // Add weekday slots
                     const weekdaySlots: AvailabilitySlot[] = [];
                     for (let day = 1; day <= 5; day++) {
                       weekdaySlots.push({
@@ -344,7 +368,7 @@ const DoctorAvailability = () => {
                         is_available: true
                       });
                     }
-                    setAvailability([...availability, ...weekdaySlots]);
+                    setAvailability(weekdaySlots);
                   }}
                 >
                   Standard Weekdays
@@ -355,6 +379,9 @@ const DoctorAvailability = () => {
                 <Button
                   variant="outline"
                   onClick={() => {
+                    // Clear existing slots first
+                    setAvailability([]);
+                    // Add extended hours slots
                     const extendedSlots: AvailabilitySlot[] = [];
                     for (let day = 1; day <= 6; day++) {
                       extendedSlots.push({
@@ -364,7 +391,7 @@ const DoctorAvailability = () => {
                         is_available: true
                       });
                     }
-                    setAvailability([...availability, ...extendedSlots]);
+                    setAvailability(extendedSlots);
                   }}
                 >
                   Extended Hours
