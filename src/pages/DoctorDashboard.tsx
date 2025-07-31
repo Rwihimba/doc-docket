@@ -429,7 +429,11 @@ const DoctorDashboard = () => {
                   <Calendar className="h-4 w-4 mr-2" />
                   Add Appointment
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => navigate('/doctor-patients')}
+                >
                   <Users className="h-4 w-4 mr-2" />
                   View Patients
                 </Button>
