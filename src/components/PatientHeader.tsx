@@ -46,7 +46,11 @@ export function PatientHeader() {
             </div>
             
             <nav className="hidden md:flex items-center space-x-6">
-              <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+              <Button 
+                variant="ghost" 
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => navigate('/')}
+              >
                 Find Doctors
               </Button>
               <Button 
@@ -55,9 +59,6 @@ export function PatientHeader() {
                 onClick={() => navigate('/appointments')}
               >
                 My Appointments
-              </Button>
-              <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-                Health Records
               </Button>
             </nav>
           </div>
