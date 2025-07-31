@@ -425,10 +425,6 @@ const DoctorDashboard = () => {
                 <CardTitle className="text-foreground">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Add Appointment
-                </Button>
                 <Button 
                   variant="outline" 
                   className="w-full justify-start"
