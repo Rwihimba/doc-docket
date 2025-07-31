@@ -80,18 +80,10 @@ export function DoctorProfileModal({ doctor, isOpen, onClose, onBookAppointment 
   };
 
   const handleConfirmBooking = () => {
-    console.log('=== MODAL CONFIRM BOOKING ===');
-    console.log('selectedTime:', selectedTime);
-    console.log('selectedDate:', selectedDate);
-    console.log('doctor:', doctor);
-    console.log('appointmentType:', appointmentType);
     if (selectedTime && selectedDate && doctor) {
-      console.log('Calling onBookAppointment with:', doctor.id, selectedDate, selectedTime, appointmentType);
       onBookAppointment(doctor.id, selectedDate, selectedTime, appointmentType);
       setShowConfirmation(false);
       onClose();
-    } else {
-      console.log('Missing required data for booking');
     }
   };
 

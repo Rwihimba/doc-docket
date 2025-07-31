@@ -172,17 +172,13 @@ const PatientDashboard = () => {
   };
 
   const handleConfirmBooking = async (doctorId: string, date: Date, time: string, type: 'in-person' | 'video') => {
-    console.log('=== BOOKING DEBUG START ===');
-    console.log('doctorId:', doctorId);
-    console.log('date:', date);
-    console.log('time:', time);
-    console.log('type:', type);
-    console.log('user:', user);
-    console.log('selectedDoctor:', selectedDoctor);
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+       // Find the doctor by the selected doctor object instead of doctorId
+       const doctorToBook = doctors.find(d => d.id === doctorId);
+       
+       const { data, error } = await supabase
         .from('appointments')
         .insert({
           patient_id: user.id,
@@ -191,7 +187,7 @@ const PatientDashboard = () => {
           appointment_time: time,
           type: type,
           status: 'pending',
-          location: type === 'video' ? 'Video Call' : selectedDoctor?.location
+          location: type === 'video' ? 'Video Call' : (doctorToBook?.location || selectedDoctor?.location)
         })
         .select()
         .single();
@@ -303,7 +299,7 @@ const PatientDashboard = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 appointments-section">
             <UpcomingAppointments key={appointmentsKey} />
             
             {/* Quick Stats */}

@@ -49,7 +49,14 @@ export function PatientHeader() {
               <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
                 Find Doctors
               </Button>
-              <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+              <Button 
+                variant="ghost" 
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  const appointmentsSection = document.querySelector('.appointments-section');
+                  appointmentsSection?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
                 My Appointments
               </Button>
               <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
