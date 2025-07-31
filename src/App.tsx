@@ -11,6 +11,7 @@ import AppointmentConfirmation from "./pages/AppointmentConfirmation";
 import NotFound from "./pages/NotFound";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import DoctorPatients from "./pages/DoctorPatients";
+import DoctorAvailability from "./pages/DoctorAvailability";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/appointments" element={<MyAppointments />} />
             <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
             <Route path="/doctor-patients" element={<DoctorPatients />} />
+            <Route path="/doctor-availability" element={<DoctorAvailability />} />
             <Route path="/appointment/:appointmentId" element={<AppointmentConfirmation />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

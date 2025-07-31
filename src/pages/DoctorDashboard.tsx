@@ -433,7 +433,11 @@ const DoctorDashboard = () => {
                   <Users className="h-4 w-4 mr-2" />
                   View Patients
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => navigate('/doctor-availability')}
+                >
                   <Clock className="h-4 w-4 mr-2" />
                   Set Availability
                 </Button>
