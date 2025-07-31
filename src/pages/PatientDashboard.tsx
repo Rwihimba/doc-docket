@@ -176,14 +176,23 @@ const PatientDashboard = () => {
     if (!user) return;
 
     try {
-       // Find the doctor by the selected doctor object instead of doctorId
+       // Find the doctor by the selected doctor object to get user_id
        const doctorToBook = doctors.find(d => d.id === doctorId);
+       
+       if (!doctorToBook) {
+         toast({
+           title: "Doctor Not Found",
+           description: "Unable to find the selected doctor. Please try again.",
+           variant: "destructive",
+         });
+         return;
+       }
        
        const { data, error } = await supabase
         .from('appointments')
         .insert({
           patient_id: user.id,
-          doctor_id: doctorId,
+          doctor_id: doctorToBook.user_id, // Use user_id instead of id
           appointment_date: date.toISOString().split('T')[0],
           appointment_time: time,
           type: type,
