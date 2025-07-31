@@ -28,18 +28,7 @@ export function DoctorCard({ doctor, onBookAppointment }: DoctorCardProps) {
   return (
     <Card className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 group">
       <CardContent className="p-6">
-        <div className="flex items-start space-x-4">
-          {/* Doctor Avatar */}
-          <Avatar className="h-16 w-16 ring-2 ring-medical-blue/20">
-            <AvatarImage 
-              src={doctor.avatar || 'https://cdn4.iconfinder.com/data/icons/glyphs/24/icons_user-1024.png'} 
-              alt={doctor.name} 
-            />
-            <AvatarFallback className="bg-medical-blue text-white text-lg font-semibold">
-              <User className="h-8 w-8" />
-            </AvatarFallback>
-          </Avatar>
-
+        <div className="flex items-start">
           {/* Doctor Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between">
