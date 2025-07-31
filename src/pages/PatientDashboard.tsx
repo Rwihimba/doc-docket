@@ -109,7 +109,8 @@ const PatientDashboard = () => {
         const doctorName = profile?.display_name || 'Dr. Professional';
         
         return {
-          id: doctor.id,
+          id: doctor.id, // This is the correct doctor table ID
+          user_id: doctor.user_id, // Keep user_id for reference
           name: doctorName,
           specialty: doctor.specialty,
           rating: doctor.rating || 4.5,
